@@ -713,11 +713,16 @@ static inline CGSize CTFramesetterSuggestFrameSizeForAttributedStringWithConstra
                 // because if string isn't too long, CT wont add the truncationToken on it's own
                 // There is no change of a double truncationToken because CT only add the token if it removes characters (and the one we add will go first)
                 NSMutableAttributedString *truncationString = [[attributedString attributedSubstringFromRange:NSMakeRange((NSUInteger)lastLineRange.location, (NSUInteger)lastLineRange.length)] mutableCopy];
-                if (lastLineRange.length > 0) {
+                while (lastLineRange.length > 0) {
                     // Remove any newline at the end (we don't want newline space between the text and the truncation token). There can only be one, because the second would be on the next line.
                     unichar lastCharacter = [[truncationString string] characterAtIndex:(NSUInteger)(lastLineRange.length - 1)];
-                    if ([[NSCharacterSet newlineCharacterSet] characterIsMember:lastCharacter]) {
+                    lastCharacter = [[truncationString string] characterAtIndex:(NSUInteger)(lastLineRange.length - 1)];
+                    if ([excludeSet characterIsMember:lastCharacter])
+                    {
                         [truncationString deleteCharactersInRange:NSMakeRange((NSUInteger)(lastLineRange.length - 1), 1)];
+                        lastLineRange = CFRangeMake(lastLineRange.location, lastLineRange.length - 1);
+                    } else {
+                        break;
                     }
                 }
                 [truncationString appendAttributedString:attributedTokenString];
